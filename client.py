@@ -1,32 +1,37 @@
 import socket
 import funcs
-import user
 import threading
 import json
 from redis import Redis
 import time
 import sys
+from user import LazyUser
+from config import HOST, PORT, TRANSACTION_QUEUE_KEY, BLOCK_USED_KEY_PREFIX, BLOCK_KEY_PREFIX, \
+    PREV_HASH_KEY, SEND_TRANSACTIONS_QUEUE_KEY
+from miner import Miner
 
-HOST = '127.0.0.1'
-PORT = 9997
-TRANSACTION_QUEUE_KEY = 'transactions.queue'
-BLOCK_KEY_PREFIX = 'chain.block.'
-PREV_HASH_KEY = 'prev_hash'
-BLOCK_USED_KEY_PREFIX = 'chain.block.used.'
 
 prev_hash = 'block hash of genesis'
+redis_connection = Redis()
 
 
 def miner_thread(sock, User):
-	miner = Miner()
+    miner = Miner(redis_connection, User)
 
-	while True:
-		block = miner.mine()
-		funcs.send_message(sock,json.dumps(block))
+    while True:
+        print("trying to mine")
+        block = miner.mine()
+        print("have a block, broadcasting")
+        funcs.send_message(sock, block.to_redis())
 
 
 def send_transaction(sock,User):
-	pass
+    while True:
+        print("waiting for transaction to be sent")
+        transaction = redis_connection.blpop(SEND_TRANSACTIONS_QUEUE_KEY)
+        print("try to send the received transaction")
+        funcs.send_message(sock, transaction)
+
 
 
 def handle_receive(sock, User):
@@ -43,6 +48,7 @@ def handle_receive(sock, User):
 
             # TODO (param): verify if the sender has the money to send
             if transaction.verify():
+                print("new transaction added to queue")
                 redis_connection.rpush(TRANSACTION_QUEUE_KEY, json.dumps(payload))
             else:
                 print("Invalid transaction received from tracker", file=sys.stderr)
@@ -58,6 +64,7 @@ def handle_receive(sock, User):
             if block.verify():
                 # add block to redis
                 key = "{}{}".format(BLOCK_KEY_PREFIX, block.hash)
+                print("adding block")
                 redis_connnection.set(key, json.dumps(payload))
 
                 # store in redis that this block hasn't been used yet
@@ -65,6 +72,7 @@ def handle_receive(sock, User):
 
                 # make the prev_hash field used by local miner to be the hash of the block
                 # we just added
+                print("prev hash key set to {}".format(block.hash))
                 redis_connection.set(PREV_HASH_KEY, block.hash)
 
                 # TODO (param): remove pending transactions
@@ -75,23 +83,23 @@ def handle_receive(sock, User):
 
 
 if __name__ == '__main__':
-	# the user managing this client
+    # the user managing this client
     # TODO (param): manage this guy's stuff that should be in redis
-	User = LazyUser()
+    User = LazyUser()
 
-	# boradcasting connection to tracker
-	clientSock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-	clientSock.connect((HOST,PORT))
+    # boradcasting connection to tracker
+    clientSock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    clientSock.connect((HOST,PORT))
 
-	# The receiving thread for this client
-	th = threading.Thread(target = handle_receive, args = [clientSock,User], daemon = True)
-	th.start()
+    # The receiving thread for this client
+    rec_thread = threading.Thread(target = handle_receive, args = [clientSock,User], daemon = True)
+    rec_thread.start()
 
-	# The broadcasting thread for this client
-	th = threading.Thread(target = miner_thread, args = [clientSock,User], daemon = True)
-	th.start()
+    # The broadcasting thread for this client
+    broadcast_thread = threading.Thread(target = miner_thread, args = [clientSock,User], daemon = True)
+    broadcast_thread.start()
 
-	th = threading.Thread(target = send_transaction, args = [clientSock,User], daemon = True)
-	th.start()
+    th = threading.Thread(target = send_transaction, args = [clientSock,User], daemon = True)
+    th.start()
 
-	clientSock.close()
+    clientSock.close()

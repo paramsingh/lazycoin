@@ -1,9 +1,7 @@
 import funcs
 import threading
 import queue
-
-HOST = '127.0.0.1'
-PORT = 9998
+from config import HOST, PORT
 
 send_lock = threading.Lock()
 send_queues = []
@@ -17,6 +15,7 @@ def client_receive(client_socket,client_address,q):
 	th.start()
 
 	while True:
+		print("trying to receive")
 		size = funcs.receive_data(client_socket,5)
 		message = funcs.receive_data(client_socket,int(size))
 
