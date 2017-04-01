@@ -3,43 +3,74 @@ import rsa
 from hashlib import sha256
 import json
 
-TRANSACTIONS_IN_BLOCK = 1
 
 class Transaction(object):
 
-    ''' Constructor for creating new transaction'''
-    def __init__(self, prev_hash, transaction_type, sender, receiver, signature):
+    def __init__(self, prev_hash, transaction_type, sender, receiver):
+        """ Constructor for creating new transaction
+        """
         self.prev_hash = prev_hash
         self.transaction_type = transaction_type
         self.sender = sender
         self.receiver = receiver
+
+
+    def add_signature(self, signature):
+        """ Add signature to the transaction """
         self.signature = signature
-        self.message = self.to_str()
-        self.hash = sha256(self.message.encode('utf-8')).hexdigest()
 
-    def to_str(self):
-        return json.dumps(self.__dict__)
+    @property
+    def hash(self):
+        return sha256(self.to_dict().encode('utf-8')).hexdigest()
 
-    ''' Verifies the signature on transaction'''
+    def to_dict(self):
+        """
+        Converts the transaction data into a serializable json format.
+        """
+        return {
+            'prev_hash': self.prev_hash,
+            'transaction_type': self.transaction_type,
+            'sender': self.sender,
+            'receiver': self.receiver,
+        }
+
+
+    def to_redis(self):
+        """
+        Converts the entire transaction into a json format that can be put into redis
+        """
+
+        return {
+            'signature': self.signature,
+            'data': self.to_dict(),
+        }
+
+
     def verify(self):
-        message = self.to_str()
+        """ Verifies the signature of transaction
+        """
         try:
-            rsa.verify(message, self.signature, self.sender)
+            rsa.verify(self.message, self.signature, self.sender)
         except VerificationError:
             print("Verification failed", file=sys.stderr)
             return False
 
         return True
 
+
     @classmethod
-    def from_json(cls, payload):
-        return cls(
-            prev_hash=payload['prev_hash'],
-            transaction_type=payload['transaction_type'],
-            sender=payload['sender'],
-            receiver=payload['receiver'],
-            signature=payload['signature'],
+    def from_redis(cls, payload):
+        """ Factory to create a Transaction object from redis
+        """
+        obj = cls(
+            prev_hash=payload['data']['prev_hash'],
+            transaction_type=payload['data']['transaction_type'],
+            sender=payload['data']['sender'],
+            receiver=payload['data']['receiver'],
         )
+        obj.add_signature(payload['signature'])
+        return obj
+
 
 class Block(object):
 
@@ -47,21 +78,34 @@ class Block(object):
         self.prev_hash = prev_hash
         self.transactions = []
 
-    def add_transaction(self, transaction):
-        if len(self.transactions) < TRANSACTIONS_IN_BLOCK:
-            self.transactions.append(transaction)
-            return True
-        else:
-            return False
 
-    def add_create_transaction(self, transaction):
-        """ adds a transaction that creates lazycoins """
+    def full(self):
+        return len(self.transactions) >= TRANSACTIONS_IN_BLOCK
+
+
+    def add_transaction(self, transaction):
         self.transactions.append(transaction)
+
+
+    def to_json(self):
+        payload = {
+            'nonce': self.nonce,
+            'prev_hash': self.prev_hash,
+            'transactions': [],
+        }
+        for t in self.transactions:
+            transactions.append(t.to_redis())
+        return payload
+
 
     def add_nonce(self, nonce):
         self.nonce = nonce
-        # now get the hash also
-        self.hash = sha256(json.dumps(self.__dict__).encode('utf-8')).hexdigest()
+
+
+    @property
+    def hash(self):
+        return sha256(json.dumps(self.to_json()).encode('utf-8')).hexdigest()
+
 
     @classmethod
     def from_json(cls, payload):
@@ -71,7 +115,9 @@ class Block(object):
         obj.add_nonce(payload['nonce'])
         return obj
 
+    def verify(self):
+        return self.nonce == 0
+
 
 if __name__ == '__main__':
-    t = Transaction('fdjasklfasd', 'fasdjklajsdf', 'fdsjk', 'fdjsak', 'fdjskl')
-    print(t.to_str())
+    pass

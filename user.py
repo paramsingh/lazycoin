@@ -6,9 +6,6 @@ class LazyUser(object):
         self.pub, self.priv = rsa.newkeys(512)
 
     def sign(self, transaction):
-        message = str(transaction)
+        message = json.dumps(transaction.to_dict())
         signature = rsa.sign(message, self.priv, 'SHA-256')
         return (message, signature)
-
-    def send_coins(self, amount):
-        pass
