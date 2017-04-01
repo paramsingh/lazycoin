@@ -31,6 +31,16 @@ class Transaction(object):
 
         return True
 
+    @classmethod
+    def from_json(cls, payload):
+        return cls(
+            prev_hash=payload['prev_hash'],
+            transaction_type=payload['transaction_type'],
+            sender=payload['sender'],
+            receiver=payload['receiver'],
+            signature=payload['signature'],
+        )
+
 class Block(object):
 
     def __init__(self, prev_hash):
@@ -53,8 +63,13 @@ class Block(object):
         # now get the hash also
         self.hash = sha256(json.dumps(self.__dict__).encode('utf-8')).hexdigest()
 
-    def write_to_redis(self):
-        pass
+    @classmethod
+    def from_json(cls, payload):
+        obj = cls(payload['prev_hash'])
+        for transaction in payload['transactions']:
+            obj.transactions.append(Transaction.from_json(transaction))
+        obj.add_nonce(payload['nonce'])
+        return obj
 
 
 if __name__ == '__main__':

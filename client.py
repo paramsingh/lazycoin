@@ -30,9 +30,9 @@ def send_transaction(sock,User):
 
 
 def handle_receive(sock, User):
-    ''' Thread receives broadcasted data'''
+    """ Thread receives broadcasted data """
     while True:
-        message = funcs.receive_message(clientSock)
+        message = funcs.receive_message(sock)
         data = json.loads(message)
         if message['type'] == 'transaction':
             payload = message['payload']
