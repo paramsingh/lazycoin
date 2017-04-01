@@ -19,12 +19,11 @@ def client_receive(client_socket,client_address,q):
 	while True:
 		size = funcs.receive_data(client_socket,5)
 		message = funcs.receive_data(client_socket,int(size))
-		
+
 		with send_lock:
 			for qu in send_queues:
 				if qu != q:
 					qu.put(size+message)
-	
 
 
 def send_to_client(sock,q):
@@ -33,6 +32,7 @@ def send_to_client(sock,q):
 		if data == None:
 			break
 		send(sock,data)
+
 
 def send(sock,data):
 	funcs.send_data(sock,data)
