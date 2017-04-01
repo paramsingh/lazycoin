@@ -4,12 +4,15 @@ import user
 import threading
 import json
 import redis
+import time
+import sys
 
 HOST = '127.0.0.1'
 PORT = 9997
-
-# redis connection
-rc = redis.StrictRedis(host='localhost', port=6379, db=0)
+TRANSACTION_QUEUE_KEY = 'transactions.queue'
+BLOCK_KEY_PREFIX = 'chain.block.'
+PREV_HASH_KEY = 'prev_hash'
+BLOCK_USED_KEY_PREFIX = 'chain.block.used.'
 
 prev_hash = 'block hash of genesis'
 
@@ -21,18 +24,51 @@ def miner_thread(sock, User):
 		block = miner.mine()
 		funcs.send_message(sock,json.dumps(block))
 
+
 def send_transaction(sock,User):
 	pass
 
 
-''' Thread receives broadcasted data'''
 def handle_receive(sock, User):
-	pass
+    ''' Thread receives broadcasted data'''
+    while True:
+        message = funcs.receive_message(clientSock)
+        data = json.loads(message)
+        if message['type'] == 'transaction':
+            payload = message['payload']
+            # load transaction into a transaction object
+            transaction = Transaction.from_json(payload)
+            # verify transaction and if it is valid, put it into the
+            # redis queue of transactions that need to be mined
+            if transaction.verify():
+                self.redis.rpush(TRANSACTION_QUEUE_KEY, json.dumps(payload))
+            else:
+                print("Invalid transaction received from tracker", file=sys.stderr)
+                print("json of transaction: ", file=sys.stderr)
+                print(json.dumps(payload, indent=4), file=sys.stderr)
+        elif message['type'] == 'block':
+            payload = message['payload']
+            # load block into a block object and verify if it is valid
+            # if it is valid, put it into redis and update the prev_hash key
+            # and remove the transactions done from the pending transactions queue
+            block = Block.from_json(payload)
+            if block.verify():
+                # add block to redis
+                key = "{}{}".format(BLOCK_KEY_PREFIX, block.hash)
+                self.redis.set(key, json.dumps(payload))
 
+                # store in redis that this block hasn't been used yet
+                self.redis.set("{}{}".format(BLOCK_USED_KEY_PREFIX, block.hash), '0')
+
+                # make the prev_hash field used by local miner to be the hash of the block
+                # we just added
+                self.redis.set(PREV_HASH_KEY, block.hash)
+
+                # TODO: remove pending transactions
 
 
 if __name__ == '__main__':
-	
+
 	# the user managing this miner
 	User = LazyUser()
 
@@ -51,15 +87,4 @@ if __name__ == '__main__':
 	th = threading.Thread(target = send_transaction, args = [clientSock,User], daemon = True)
 	th.start()
 
-
-	'''funcs.send_message(clientSock, "Princu")
-
-	while(True):
-		message = funcs.receive_message(clientSock)
-		print(message)
-
-	while True: 
-		pass
-	clientSock.close()'''
-
-
+	clientSock.close()
