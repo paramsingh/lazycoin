@@ -3,28 +3,31 @@ import funcs
 import user
 import threading
 import json
+import redis
 
 HOST = '127.0.0.1'
 PORT = 9997
 
+# redis connection
+rc = redis.StrictRedis(host='localhost', port=6379, db=0)
 
-def handle_send(sock, User):
+prev_hash = 'block hash of genesis'
+
+
+def miner_thread(sock, User):
+	miner = Miner()
+
+	while True:
+		block = miner.mine()
+		funcs.send_message(sock,json.dumps(block))
+
+def send_transaction(sock,User):
 	pass
+
 
 ''' Thread receives broadcasted data'''
 def handle_receive(sock, User):
-
-	#receiving
-	while True:
-		message = json.loads(funcs.receive_message(sock))
-		if message['type'] == 'Transaction':
-			# it is a transaction
-		else
-			# it is a block request
-
-
-
-
+	pass
 
 
 
@@ -42,7 +45,10 @@ if __name__ == '__main__':
 	th.start()
 
 	#The Broadcasting thread for this miner
-	th = threading.Thread(target = handle_send, args = [clientSock,User], daemon = True)
+	th = threading.Thread(target = miner_thread, args = [clientSock,User], daemon = True)
+	th.start()
+
+	th = threading.Thread(target = send_transaction, args = [clientSock,User], daemon = True)
 	th.start()
 
 
