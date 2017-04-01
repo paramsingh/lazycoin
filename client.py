@@ -41,7 +41,7 @@ def handle_receive(sock, User):
             # verify transaction and if it is valid, put it into the
             # redis queue of transactions that need to be mined
             if transaction.verify():
-                self.redis.rpush(TRANSACTION_QUEUE_KEY, json.dumps(payload))
+                redis_connection.rpush(TRANSACTION_QUEUE_KEY, json.dumps(payload))
             else:
                 print("Invalid transaction received from tracker", file=sys.stderr)
                 print("json of transaction: ", file=sys.stderr)
@@ -55,14 +55,14 @@ def handle_receive(sock, User):
             if block.verify():
                 # add block to redis
                 key = "{}{}".format(BLOCK_KEY_PREFIX, block.hash)
-                self.redis.set(key, json.dumps(payload))
+                redis_connnection.set(key, json.dumps(payload))
 
                 # store in redis that this block hasn't been used yet
-                self.redis.set("{}{}".format(BLOCK_USED_KEY_PREFIX, block.hash), '0')
+                redis_connnection.set("{}{}".format(BLOCK_USED_KEY_PREFIX, block.hash), '0')
 
                 # make the prev_hash field used by local miner to be the hash of the block
                 # we just added
-                self.redis.set(PREV_HASH_KEY, block.hash)
+                redis_connection.set(PREV_HASH_KEY, block.hash)
 
                 # TODO: remove pending transactions
 
