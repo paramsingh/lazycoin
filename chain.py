@@ -7,6 +7,7 @@ TRANSACTIONS_IN_BLOCK = 1
 
 class Transaction(object):
 
+    ''' Constructor for creating new transaction'''
     def __init__(self, prev_hash, transaction_type, sender, receiver, signature):
         self.prev_hash = prev_hash
         self.transaction_type = transaction_type
@@ -19,6 +20,7 @@ class Transaction(object):
     def to_str(self):
         return json.dumps(self.__dict__)
 
+    ''' Verifies the signature on transaction'''
     def verify(self):
         message = self.to_str()
         try:
