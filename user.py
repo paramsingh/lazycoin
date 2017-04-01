@@ -1,6 +1,6 @@
 import rsa
 
-class User(object):
+class LazyUser(object):
 
     def __init__(self):
         self.pub, self.priv = rsa.newkeys(512)
