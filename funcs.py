@@ -1,3 +1,5 @@
+import socket
+
 def send_data(sock,data):
 	sock.sendall(data)
 
@@ -12,6 +14,7 @@ def receive_data(sock,size = 4096):
 	return data
 
 def nDigit(s,size):
+	s = str(s)
 	if(len(s)<size):
 		s = '0'*(size-len(s))+s
 	return s
@@ -23,16 +26,14 @@ def create_listening_socket(host,port,size):
 	return listening_socket
 
 
-
-
-def receive_message(sock,size):
-	msg = receive_data(sock,size)
-	msg = msg.decode('utf-8')
+def receive_message(sock):
+	size = receive_data(sock,5).decode('utf-8')
+	msg = receive_data(sock,int(size)).decode('utf-8')
 	return msg
 
 
-def send_message(sock,uno,message,sig = 999):
+def send_message(sock,message):
 	message = message.encode('utf-8')
-	header = create_header(uno,sig,len(message))
-	message = header+message
+	size = nDigit(len(message),5).encode('utf-8')
+	message = size+message
 	send_data(sock,message)
