@@ -3,7 +3,7 @@ import funcs
 import user
 import threading
 import json
-import redis
+from redis import Redis
 import time
 import sys
 
@@ -40,12 +40,15 @@ def handle_receive(sock, User):
             transaction = Transaction.from_json(payload)
             # verify transaction and if it is valid, put it into the
             # redis queue of transactions that need to be mined
+
+            # TODO (param): verify if the sender has the money to send
             if transaction.verify():
                 redis_connection.rpush(TRANSACTION_QUEUE_KEY, json.dumps(payload))
             else:
                 print("Invalid transaction received from tracker", file=sys.stderr)
                 print("json of transaction: ", file=sys.stderr)
                 print(json.dumps(payload, indent=4), file=sys.stderr)
+
         elif message['type'] == 'block':
             payload = message['payload']
             # load block into a block object and verify if it is valid
@@ -64,23 +67,27 @@ def handle_receive(sock, User):
                 # we just added
                 redis_connection.set(PREV_HASH_KEY, block.hash)
 
-                # TODO: remove pending transactions
+                # TODO (param): remove pending transactions
+            else:
+                print("Invalid block received from tracker", file=sys.stderr)
+                print("json of transaction: ", file=sys.stderr)
+                print(json.dumps(payload, indent=4), file=sys.stderr)
 
 
 if __name__ == '__main__':
-
-	# the user managing this miner
+	# the user managing this client
+    # TODO (param): manage this guy's stuff that should be in redis
 	User = LazyUser()
 
-	# boradcasting connection to csec
+	# boradcasting connection to tracker
 	clientSock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 	clientSock.connect((HOST,PORT))
 
-	# The receiving thread for this miner
+	# The receiving thread for this client
 	th = threading.Thread(target = handle_receive, args = [clientSock,User], daemon = True)
 	th.start()
 
-	#The Broadcasting thread for this miner
+	# The broadcasting thread for this client
 	th = threading.Thread(target = miner_thread, args = [clientSock,User], daemon = True)
 	th.start()
 
