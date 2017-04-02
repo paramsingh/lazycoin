@@ -55,7 +55,7 @@ class Transaction(object):
         r.rpush(TRANSACTION_QUEUE_KEY, json.dumps(self.to_redis(), sort_keys=True))
         sig_key = "{}{}".format(TRANSACTIONS_SIGNATURE, self.hash)
         print("signature key for transaction = " + sig_key)
-        r.set(sig_key, signature)
+        r.set(sig_key, self.signature)
 
 
     def verify(self):

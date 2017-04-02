@@ -93,9 +93,6 @@ def handle_receive(sock, User):
                 print("adding block to key: {}".format(key))
                 redis_connection.set(key, json.dumps(block.to_json(), sort_keys=True))
 
-                # store in redis that this block hasn't been used yet
-                redis_connection.set("{}{}".format(BLOCK_USED_KEY_PREFIX, block.hash), '0')
-
                 # make the prev_hash field used by local miner to be the hash of the block
                 # we just added
                 print("prev hash key set to {}".format(block.hash))
