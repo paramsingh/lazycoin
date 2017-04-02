@@ -22,7 +22,7 @@ class Transaction(object):
 
     @property
     def hash(self):
-        return sha256(json.dumps(self.to_dict()).encode('utf-8')).hexdigest()
+        return sha256(json.dumps(self.to_dict(), sort_keys=True).encode('utf-8')).hexdigest()
 
     def to_dict(self):
         """
@@ -37,7 +37,7 @@ class Transaction(object):
             },
             'receiver': {
                 'n': self.receiver.n,
-                'e': self.receiver.e
+                'e': self.receiver.e,
             },
         }
 
@@ -52,10 +52,10 @@ class Transaction(object):
         }
 
     def write_to_redis(self, r):
-        r.rpush(TRANSACTION_QUEUE_KEY, json.dumps(self.to_redis()))
+        r.rpush(TRANSACTION_QUEUE_KEY, json.dumps(self.to_redis(), sort_keys=True))
         sig_key = "{}{}".format(TRANSACTIONS_SIGNATURE, self.hash)
         print("signature key for transaction = " + sig_key)
-        r.set(sig_key, signature)
+        r.set(sig_key, self.signature)
 
 
     def verify(self):
@@ -121,7 +121,7 @@ class Block(object):
 
     @property
     def hash(self):
-        return sha256(json.dumps(self.to_json()).encode('utf-8')).hexdigest()
+        return sha256(json.dumps(self.to_json(), sort_keys=True).encode('utf-8')).hexdigest()
 
 
     @classmethod
@@ -133,7 +133,11 @@ class Block(object):
         return obj
 
     def verify(self):
-        return self.nonce == 0
+        acc = ''
+        for t in self.transactions:
+            acc += str(t.hash)
+
+        return int(sha256((str(self.nonce)+acc).encode('utf-8')).hexdigest()[0:4],16) < GAMER_BAWA
 
 
 if __name__ == '__main__':

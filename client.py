@@ -6,6 +6,7 @@ from redis import Redis
 import time
 import sys
 from chain import Transaction, Block
+import chain
 from user import LazyUser
 from config import HOST, PORT, TRANSACTION_QUEUE_KEY, BLOCK_USED_KEY_PREFIX, BLOCK_KEY_PREFIX, \
     PREV_HASH_KEY, SEND_TRANSACTIONS_QUEUE_KEY
@@ -23,6 +24,11 @@ def miner_thread(sock, User):
     while True:
         print("trying to mine")
         block = miner.mine()
+        if block == None:
+            redis_connection.set("StopMining","No")
+            print("Puzzle solved by other node")
+            continue
+
         print("have a block, broadcasting")
         #funcs.send_message(sock, block.to_redis())
         #funcs.send_object(block)
@@ -30,6 +36,7 @@ def miner_thread(sock, User):
         print("Serialized block = ")
         print(serial)
         #print(json.dumps(bl.to_json(),indent = 4))
+        funcs.send_message(sock,"Block")
         funcs.send_bytes(sock,serial)
 
 
@@ -40,18 +47,22 @@ def send_transaction(sock,User):
         transaction = Transaction.from_redis(redis_connection, payload)
         print("try to send the received transaction")
         serial = pickle.dumps(transaction)
+        funcs.send_message(sock,"Transaction")
+        funcs.send_bytes(sock,serial)
 
-        funcs.send_bytes(serial)
 
-
+def stop_mining():
+    redis_connection.set("StopMining","Yes")
 
 def handle_receive(sock, User):
     """ Thread receives broadcasted data """
     while True:
+
+        tp = funcs.receive_message(sock)
+
         data = funcs.receive_bytes(sock)
         obj = pickle.loads(data)
-
-        if type(obj) == Transaction:
+        if tp == "Transaction":
             # load transaction into a transaction object
             transaction = obj
             # verify transaction and if it is valid, put it into the
@@ -60,13 +71,13 @@ def handle_receive(sock, User):
             # TODO (param): verify if the sender has the money to send
             if transaction.verify():
                 print("new transaction added to queue")
-                redis_connection.rpush(TRANSACTION_QUEUE_KEY, json.dumps(payload))
+                transaction.write_to_redis(redis_connection)
             else:
                 print("Invalid transaction received from tracker", file=sys.stderr)
                 print("json of transaction: ", file=sys.stderr)
                 print(json.dumps(payload, indent=4), file=sys.stderr)
 
-        elif type(obj) == Block:
+        elif tp == "Block":
 
             # load block into a block object and verify if it is valid
             # if it is valid, put it into redis and update the prev_hash key
@@ -74,20 +85,21 @@ def handle_receive(sock, User):
             block = obj
             if block.verify():
                 # add block to redis
+                print("Received block is verified")
+                print("Stopping current mining")
+                stop_mining()
+
                 key = "{}{}".format(BLOCK_KEY_PREFIX, block.hash)
                 print("adding block to key: {}".format(key))
-                redis_connection.set(key, json.dumps(block.to_json()))
-
-                # store in redis that this block hasn't been used yet
-                redis_connection.set("{}{}".format(BLOCK_USED_KEY_PREFIX, block.hash), '0')
+                redis_connection.set(key, json.dumps(block.to_json(), sort_keys=True))
 
                 # make the prev_hash field used by local miner to be the hash of the block
                 # we just added
                 print("prev hash key set to {}".format(block.hash))
                 redis_connection.set(PREV_HASH_KEY, block.hash)
 
-                # TODO (param): remove pending transactions
             else:
+                print(type(obj))
                 print("Invalid block received from tracker", file=sys.stderr)
                 print("json of transaction: ", file=sys.stderr)
                 print(json.dumps(payload, indent=4), file=sys.stderr)

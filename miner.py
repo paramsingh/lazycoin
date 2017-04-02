@@ -1,9 +1,10 @@
 from redis import Redis
 import time
-from config import TRANSACTION_QUEUE_KEY, BLOCK_USED_KEY_PREFIX, BLOCK_KEY_PREFIX, PREV_HASH_KEY
+from config import *
 from chain import Transaction, Block
 import json
-
+from random import randint
+import hashlib
 
 class Miner(object):
 
@@ -11,16 +12,36 @@ class Miner(object):
         self.r = redis_connection
         self.user = user
 
+    def stop_mining(self):
+        val = self.r.get("StopMining")
+        if val == 'Yes':
+            return True
+        else:
+            return False
+
     def mine(self):
         """ Looks in redis for transactions and mines them to find the answer to the puzzle
         """
         print("Mining")
 
         prev_hash = self.r.get(PREV_HASH_KEY)
+        if prev_hash:
+            prev_hash = prev_hash.decode('utf-8')
+
         block = Block(prev_hash)
+
 
         # wait to fill the block with transactions
         while not block.full():
+            # in between mining
+            if self.stop_mining():
+                print("Someone mined the coins")
+                l = len(block.transactions)
+                left = TRANSACTIONS_IN_BLOCK - l
+                for _ in range(left):
+                    self.r.blpop(TRANSACTION_QUEUE_KEY)
+                return None
+
             print("Searching for transactions to fill the block")
             # blocking pop from transaction key
             transaction = Transaction.from_redis(self.r, json.loads(self.r.blpop(TRANSACTION_QUEUE_KEY)[1].decode('utf-8')))
@@ -29,6 +50,7 @@ class Miner(object):
 
         # create a new transaction that creates a lazycoin and gives it to the user
         print("Block is full, now add a create transaction")
+        print("Prev hash = ", prev_hash)
         create = Transaction(
                 prev_hash=prev_hash,
                 transaction_type='CREATE',
@@ -50,9 +72,26 @@ class Miner(object):
         block.add_nonce(nonce)
         print("block done")
         print(json.dumps(block.to_json(), indent=4))
+
+        if self.stop_mining():
+            return None
+
         return block
 
     def solve_puzzle(self, block):
+
         print("solving puzzle")
-        return 0
+        acc = ''
+        for t in block.transactions:
+            print("hash: ", str(t.hash))
+            acc += str(t.hash)
+        print("accumulate:", acc)
+
+
+        while True:
+            nonce = str(randint(1,10**9))
+            if int(hashlib.sha256((nonce+acc).encode('utf-8')).hexdigest()[0:4],16) < GAMER_BAWA:
+                print("val:", int(hashlib.sha256((nonce+acc).encode('utf-8')).hexdigest()[0:4],16))
+                print("nonce:", nonce)
+                return nonce
 
