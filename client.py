@@ -35,7 +35,8 @@ def miner_thread(sock, User):
 def send_transaction(sock,User):
     while True:
         print("waiting for transaction to be sent")
-        transaction = redis_connection.blpop(SEND_TRANSACTIONS_QUEUE_KEY)
+        payload = json.loads(redis_connection.blpop(SEND_TRANSACTIONS_QUEUE_KEY)[1].decode('utf-8'))
+        transaction = Transaction.from_redis(redis_connection, payload)
         print("try to send the received transaction")
         funcs.send_message(sock, transaction)
 
