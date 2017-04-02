@@ -14,6 +14,8 @@ class Miner(object):
 
     def stop_mining(self):
         val = self.r.get("StopMining")
+        if val:
+            val = val.decode('utf-8')
         if val == 'Yes':
             return True
         else:
@@ -71,9 +73,9 @@ class Miner(object):
 
         block.add_nonce(nonce)
         print("block done")
-        print(json.dumps(block.to_json(), indent=4))
 
         if self.stop_mining():
+            print("stopping mining")
             return None
 
         return block
@@ -90,8 +92,8 @@ class Miner(object):
 
         while True:
             nonce = str(randint(1,10**9))
-            if int(hashlib.sha256((nonce+acc).encode('utf-8')).hexdigest()[0:4],16) < GAMER_BAWA:
+            if int(hashlib.sha256((nonce+acc).encode('utf-8')).hexdigest()[0:6],16) < GAMER_BAWA:
                 print("val:", int(hashlib.sha256((nonce+acc).encode('utf-8')).hexdigest()[0:4],16))
                 print("nonce:", nonce)
+                time.sleep(10)
                 return nonce
-

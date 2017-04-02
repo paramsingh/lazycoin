@@ -8,8 +8,7 @@ import sys
 from chain import Transaction, Block
 import chain
 from user import LazyUser
-from config import HOST, PORT, TRANSACTION_QUEUE_KEY, BLOCK_USED_KEY_PREFIX, BLOCK_KEY_PREFIX, \
-    PREV_HASH_KEY, SEND_TRANSACTIONS_QUEUE_KEY
+from config import *
 from miner import Miner
 import pickle
 
@@ -35,6 +34,7 @@ def miner_thread(sock, User):
         serial = pickle.dumps(block)
         print("Serialized block = ")
         print(serial)
+        print(json.dumps(block.to_json(), indent=4))
         #print(json.dumps(bl.to_json(),indent = 4))
         funcs.send_message(sock,"Block")
         funcs.send_bytes(sock,serial)
@@ -71,7 +71,7 @@ def handle_receive(sock, User):
             # TODO (param): verify if the sender has the money to send
             if transaction.verify():
                 print("new transaction added to queue")
-                transaction.write_to_redis(redis_connection)
+                transaction.write_to_redis(redis_connection, TRANSACTION_QUEUE_KEY)
             else:
                 print("Invalid transaction received from tracker", file=sys.stderr)
                 print("json of transaction: ", file=sys.stderr)
