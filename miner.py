@@ -20,7 +20,7 @@ class Miner(object):
         # wait to fill the block with transactions
         while not block.full():
             # blocking pop from transaction key
-            transaction = Transaction.from_json(self.r.blpop(TRANSACTION_QUEUE_KEY))
+            transaction = Transaction.from_redis(self.r.blpop(TRANSACTION_QUEUE_KEY))
             block.add_transaction(transaction)
 
         # create a new transaction that creates a lazycoin and gives it to the user

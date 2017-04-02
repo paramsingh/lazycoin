@@ -42,7 +42,7 @@ def handle_receive(sock, User):
         if message['type'] == 'transaction':
             payload = message['payload']
             # load transaction into a transaction object
-            transaction = Transaction.from_json(payload)
+            transaction = Transaction.from_redis(payload)
             # verify transaction and if it is valid, put it into the
             # redis queue of transactions that need to be mined
 
@@ -101,5 +101,9 @@ if __name__ == '__main__':
 
     th = threading.Thread(target = send_transaction, args = [clientSock,User], daemon = True)
     th.start()
+
+    while True:
+        time.sleep(3)
+
 
     clientSock.close()
