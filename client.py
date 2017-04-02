@@ -23,6 +23,11 @@ def miner_thread(sock, User):
     while True:
         print("trying to mine")
         block = miner.mine()
+        if block == None:
+            redis_connection.set("StopMining","No")
+            print("Puzzle solved by other node")
+            continue
+
         print("have a block, broadcasting")
         #funcs.send_message(sock, block.to_redis())
         #funcs.send_object(block)
@@ -44,6 +49,8 @@ def send_transaction(sock,User):
         funcs.send_bytes(serial)
 
 
+def stop_mining():
+    redis_connection.set("StopMining","Yes")
 
 def handle_receive(sock, User):
     """ Thread receives broadcasted data """
@@ -74,6 +81,10 @@ def handle_receive(sock, User):
             block = obj
             if block.verify():
                 # add block to redis
+
+
+                stop_mining()
+
                 key = "{}{}".format(BLOCK_KEY_PREFIX, block.hash)
                 print("adding block to key: {}".format(key))
                 redis_connection.set(key, json.dumps(block.to_json()))
