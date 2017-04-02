@@ -23,25 +23,27 @@ serv.listen(5000, function() {
 });
 
 
-function getBlocks() {
+
+function getBlocks(socket) {
     client.keys('chain.block.*', function (err, keys) {
+        console.log('printing keys');
+        console.log(keys);
         var arr = [];
         if (err) return console.log(err);
         var counter = 0;
         for(var i = 0, len = keys.length; i < len; i++) {
-            console.log(keys[i]);
             var block = client.get(keys[i], function(err, reply) {
                 if(err) {
                     console.log('error occured');
                     console.log(err);
                 }
-                // reply is the block
-                console.log(reply);
                 block = JSON.parse(reply);
                 console.log(block);
                 arr.push(block);
+                counter += 1;
                 if(counter === keys.length) {
-                    return arr;
+                    console.log('emitting event');
+                    socket.emit('data', {'data': arr});
                 }
             });
         }
@@ -51,8 +53,8 @@ function getBlocks() {
 io.on('connection', function(socket) {
     console.log('A client connected');
     setInterval(function() {
-        socket.emit('data', getBlocks());
-    }, 4000);
+        getBlocks(socket);
+    }, 3000);
 });
 
 io.on('error', function(err) {
