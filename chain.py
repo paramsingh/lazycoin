@@ -51,6 +51,8 @@ class Transaction(object):
             'data': self.to_dict(),
         }
 
+    def write_to_redis(self,redis):
+        
 
     def verify(self):
         """ Verifies the signature of transaction

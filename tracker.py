@@ -21,8 +21,7 @@ def client_receive(client_socket,client_address,q):
 
 		with send_lock:
 			for qu in send_queues:
-				if qu != q:
-					qu.put(size+message)
+				qu.put(size+message)
 
 
 def send_to_client(sock,q):

@@ -21,11 +21,11 @@ def nDigit(s,size):
 		s = '0'*(size-len(s))+s
 	return s
 
-def send_bytes(sock,data)
+def send_bytes(sock,data):
 	size = nDigit(len(data),5).encode('utf-8')
-	sendall(size+data)
+	send_data(sock,size+data)
 
-def receive_bytes(sock,data)
+def receive_bytes(sock):
 	size = receive_data(sock,5).decode('utf-8')
 	data = receive_data(sock,int(size))
 	return data
