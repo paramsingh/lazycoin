@@ -11,6 +11,13 @@ class Miner(object):
         self.r = redis_connection
         self.user = user
 
+    def stop_mining(self):
+        val = self.r.get("StopMining")
+        if val == 'Yes':
+            return True
+        else:
+            return False
+
     def mine(self):
         """ Looks in redis for transactions and mines them to find the answer to the puzzle
         """
@@ -18,6 +25,7 @@ class Miner(object):
 
         prev_hash = self.r.get(PREV_HASH_KEY)
         block = Block(prev_hash)
+
 
         # wait to fill the block with transactions
         while not block.full():
