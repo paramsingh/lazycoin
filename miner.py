@@ -3,7 +3,8 @@ import time
 from config import *
 from chain import Transaction, Block
 import json
-
+from random import randint
+import hashlib
 
 class Miner(object):
 
@@ -24,6 +25,9 @@ class Miner(object):
         print("Mining")
 
         prev_hash = self.r.get(PREV_HASH_KEY)
+        if prev_hash:
+            prev_hash = prev_hash.decode('utf-8')
+    
         block = Block(prev_hash)
 
 
@@ -46,6 +50,7 @@ class Miner(object):
 
         # create a new transaction that creates a lazycoin and gives it to the user
         print("Block is full, now add a create transaction")
+        print("Prev hash = ", prev_hash)
         create = Transaction(
                 prev_hash=prev_hash,
                 transaction_type='CREATE',
@@ -82,7 +87,7 @@ class Miner(object):
 
 
         while True:
-            nonce = str(randint())
-            if int(sha256((nonce+acc).encode('utf-8')).hexdigest()[0:4],16) < GAMER_BAWA:
+            nonce = str(randint(1,10**9))
+            if int(hashlib.sha256((nonce+acc).encode('utf-8')).hexdigest()[0:4],16) < GAMER_BAWA:
                 return nonce
 

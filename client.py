@@ -6,6 +6,7 @@ from redis import Redis
 import time
 import sys
 from chain import Transaction, Block
+import chain
 from user import LazyUser
 from config import HOST, PORT, TRANSACTION_QUEUE_KEY, BLOCK_USED_KEY_PREFIX, BLOCK_KEY_PREFIX, \
     PREV_HASH_KEY, SEND_TRANSACTIONS_QUEUE_KEY
@@ -35,6 +36,7 @@ def miner_thread(sock, User):
         print("Serialized block = ")
         print(serial)
         #print(json.dumps(bl.to_json(),indent = 4))
+        funcs.send_message(sock,"Block")
         funcs.send_bytes(sock,serial)
 
 
@@ -45,8 +47,8 @@ def send_transaction(sock,User):
         transaction = Transaction.from_redis(redis_connection, payload)
         print("try to send the received transaction")
         serial = pickle.dumps(transaction)
-
-        funcs.send_bytes(serial)
+        funcs.send_message(sock,"Transaction")
+        funcs.send_bytes(sock,serial)
 
 
 def stop_mining():
@@ -55,10 +57,13 @@ def stop_mining():
 def handle_receive(sock, User):
     """ Thread receives broadcasted data """
     while True:
+        
+        tp = funcs.receive_message(sock)
+
         data = funcs.receive_bytes(sock)
         obj = pickle.loads(data)
 
-        if type(obj) == Transaction:
+        if tp == "Transaction":
             # load transaction into a transaction object
             transaction = obj
             # verify transaction and if it is valid, put it into the
@@ -73,7 +78,7 @@ def handle_receive(sock, User):
                 print("json of transaction: ", file=sys.stderr)
                 print(json.dumps(payload, indent=4), file=sys.stderr)
 
-        elif type(obj) == Block:
+        elif tp == "Block":
 
             # load block into a block object and verify if it is valid
             # if it is valid, put it into redis and update the prev_hash key
@@ -99,6 +104,7 @@ def handle_receive(sock, User):
 
                 # TODO (param): remove pending transactions
             else:
+                print(type(obj))
                 print("Invalid block received from tracker", file=sys.stderr)
                 print("json of transaction: ", file=sys.stderr)
                 print(json.dumps(payload, indent=4), file=sys.stderr)
