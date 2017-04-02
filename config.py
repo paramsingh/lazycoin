@@ -1,6 +1,6 @@
 # host and port for client and tracker
 HOST = '127.0.0.1'
-PORT = 9997
+PORT = 9996
 
 # redis key prefixes
 TRANSACTION_QUEUE_KEY = 'transactions.queue'

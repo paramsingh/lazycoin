@@ -2,6 +2,7 @@ from redis import Redis
 import rsa
 from hashlib import sha256
 import json
+from config import TRANSACTIONS_IN_BLOCK
 
 
 class Transaction(object):
