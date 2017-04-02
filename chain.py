@@ -2,7 +2,7 @@ from redis import Redis
 import rsa
 from hashlib import sha256
 import json
-from config import TRANSACTIONS_IN_BLOCK
+from config import *
 
 
 class Transaction(object):
@@ -22,7 +22,7 @@ class Transaction(object):
 
     @property
     def hash(self):
-        return sha256(self.to_dict().encode('utf-8')).hexdigest()
+        return sha256(json.dumps(self.to_dict()).encode('utf-8')).hexdigest()
 
     def to_dict(self):
         """
@@ -31,8 +31,14 @@ class Transaction(object):
         return {
             'prev_hash': self.prev_hash,
             'transaction_type': self.transaction_type,
-            'sender': self.sender,
-            'receiver': self.receiver,
+            'sender': {
+                'n': self.sender.n,
+                'e': self.sender.e,
+            },
+            'receiver': {
+                'n': self.receiver.n,
+                'e': self.receiver.e
+            },
         }
 
 
@@ -42,7 +48,6 @@ class Transaction(object):
         """
 
         return {
-            'signature': self.signature,
             'data': self.to_dict(),
         }
 
@@ -60,16 +65,20 @@ class Transaction(object):
 
 
     @classmethod
-    def from_redis(cls, payload):
+    def from_redis(cls, redis, payload):
         """ Factory to create a Transaction object from redis
         """
+        print("in from redis")
         obj = cls(
             prev_hash=payload['data']['prev_hash'],
             transaction_type=payload['data']['transaction_type'],
-            sender=payload['data']['sender'],
-            receiver=payload['data']['receiver'],
+            sender=rsa.key.PublicKey(payload['data']['sender']['n'], payload['data']['sender']['e']),
+            receiver=rsa.key.PublicKey(payload['data']['receiver']['n'], payload['data']['receiver']['e']),
         )
-        obj.add_signature(payload['signature'])
+        key = '{}{}'.format(TRANSACTIONS_SIGNATURE, obj.hash)
+        print(key)
+        obj.add_signature(redis.get(key))
+        print("Hello")
         return obj
 
 
@@ -95,7 +104,7 @@ class Block(object):
             'transactions': [],
         }
         for t in self.transactions:
-            transactions.append(t.to_redis())
+            payload['transactions'].append(t.to_redis())
         return payload
 
 

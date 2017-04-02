@@ -1,5 +1,5 @@
 # host and port for client and tracker
-HOST = '127.0.0.1'
+HOST = '192.168.43.92'
 PORT = 9996
 
 # redis key prefixes
@@ -8,6 +8,7 @@ BLOCK_KEY_PREFIX = 'chain.block.'
 PREV_HASH_KEY = 'prev_hash'
 BLOCK_USED_KEY_PREFIX = 'chain.block.used.'
 SEND_TRANSACTIONS_QUEUE_KEY = 'send.transactions.queue'
+TRANSACTIONS_SIGNATURE = 'transactions.signature.'
 
 # number of transactions in a block
 TRANSACTIONS_IN_BLOCK = 1
