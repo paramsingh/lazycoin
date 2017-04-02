@@ -83,11 +83,15 @@ class Miner(object):
         print("solving puzzle")
         acc = ''
         for t in block.transactions:
+            print("hash: ", str(t.hash))
             acc += str(t.hash)
+        print("accumulate:", acc)
 
 
         while True:
             nonce = str(randint(1,10**9))
             if int(hashlib.sha256((nonce+acc).encode('utf-8')).hexdigest()[0:4],16) < GAMER_BAWA:
+                print("val:", int(hashlib.sha256((nonce+acc).encode('utf-8')).hexdigest()[0:4],16))
+                print("nonce:", nonce)
                 return nonce
 

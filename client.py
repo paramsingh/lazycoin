@@ -71,7 +71,7 @@ def handle_receive(sock, User):
             # TODO (param): verify if the sender has the money to send
             if transaction.verify():
                 print("new transaction added to queue")
-                redis_connection.rpush(TRANSACTION_QUEUE_KEY, json.dumps(payload))
+                transaction.write_to_redis(redis_connection)
             else:
                 print("Invalid transaction received from tracker", file=sys.stderr)
                 print("json of transaction: ", file=sys.stderr)
@@ -91,7 +91,7 @@ def handle_receive(sock, User):
 
                 key = "{}{}".format(BLOCK_KEY_PREFIX, block.hash)
                 print("adding block to key: {}".format(key))
-                redis_connection.set(key, json.dumps(block.to_json()))
+                redis_connection.set(key, json.dumps(block.to_json(), sort_keys=True))
 
                 # store in redis that this block hasn't been used yet
                 redis_connection.set("{}{}".format(BLOCK_USED_KEY_PREFIX, block.hash), '0')

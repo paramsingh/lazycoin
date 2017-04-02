@@ -19,10 +19,7 @@ if __name__ == '__main__':
 
     r = Redis()
     print(json.dumps(t.to_redis(), indent=4))
-    key = "{}{}".format(TRANSACTIONS_SIGNATURE, t.hash)
-    print(key)
-    r.set(key, t.signature)
-    r.lpush(TRANSACTION_QUEUE_KEY, json.dumps(t.to_redis()))
+    t.write_to_redis(r)
     print(r.get(key))
     print(r.llen(TRANSACTION_QUEUE_KEY))
 
