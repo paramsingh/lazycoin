@@ -122,6 +122,11 @@ class Block(object):
     def add_nonce(self, nonce):
         self.nonce = nonce
 
+    def to_redis(self):
+        data = self.to_json()
+        data['hash'] = self.hash
+        return data
+
 
     @property
     def hash(self):
