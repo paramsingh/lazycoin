@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     r = Redis()
     print(json.dumps(t.to_redis(), indent=4))
-    t.write_to_redis(r)
+    t.write_to_redis(r, SEND_TRANSACTIONS_QUEUE_KEY)
     print(r.llen(TRANSACTION_QUEUE_KEY))
 
 

@@ -21,6 +21,10 @@ class Transaction(object):
         self.signature = signature
 
     @property
+    def message(self):
+        return json.dumps(self.to_dict(), sort_key=True)
+
+    @property
     def hash(self):
         return sha256(json.dumps(self.to_dict(), sort_keys=True).encode('utf-8')).hexdigest()
 
@@ -51,8 +55,8 @@ class Transaction(object):
             'data': self.to_dict(),
         }
 
-    def write_to_redis(self, r):
-        r.rpush(TRANSACTION_QUEUE_KEY, json.dumps(self.to_redis(), sort_keys=True))
+    def write_to_redis(self, r, key):
+        r.rpush(key, json.dumps(self.to_redis(), sort_keys=True))
         sig_key = "{}{}".format(TRANSACTIONS_SIGNATURE, self.hash)
         print("signature key for transaction = " + sig_key)
         r.set(sig_key, self.signature)
