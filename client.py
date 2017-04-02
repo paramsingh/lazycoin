@@ -67,7 +67,7 @@ def handle_receive(sock, User):
                 print(json.dumps(payload, indent=4), file=sys.stderr)
 
         elif type(obj) == Block:
-           
+
             # load block into a block object and verify if it is valid
             # if it is valid, put it into redis and update the prev_hash key
             # and remove the transactions done from the pending transactions queue
@@ -75,8 +75,8 @@ def handle_receive(sock, User):
             if block.verify():
                 # add block to redis
                 key = "{}{}".format(BLOCK_KEY_PREFIX, block.hash)
-                print("adding block")
-                redis_connection.set(key, json.dumps(payload))
+                print("adding block to key: {}".format(key))
+                redis_connection.set(key, json.dumps(block.to_json()))
 
                 # store in redis that this block hasn't been used yet
                 redis_connection.set("{}{}".format(BLOCK_USED_KEY_PREFIX, block.hash), '0')

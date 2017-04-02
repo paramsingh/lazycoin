@@ -51,8 +51,12 @@ class Transaction(object):
             'data': self.to_dict(),
         }
 
-    def write_to_redis(self,redis):
-        
+    def write_to_redis(self, r):
+        r.rpush(TRANSACTION_QUEUE_KEY, json.dumps(self.to_redis()))
+        sig_key = "{}{}".format(TRANSACTIONS_SIGNATURE, self.hash)
+        print("signature key for transaction = " + sig_key)
+        r.set(sig_key, signature)
+
 
     def verify(self):
         """ Verifies the signature of transaction
