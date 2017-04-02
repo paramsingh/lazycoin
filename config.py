@@ -12,3 +12,4 @@ TRANSACTIONS_SIGNATURE = 'transactions.signature.'
 
 # number of transactions in a block
 TRANSACTIONS_IN_BLOCK = 1
+GAMER_BAWA = 1024

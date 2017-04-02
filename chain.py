@@ -133,7 +133,11 @@ class Block(object):
         return obj
 
     def verify(self):
-        return self.nonce == 0
+        acc = ''
+        for t in self.transactions:
+            acc += str(t.hash)
+
+        return int(sha256((str(self.nonce)+acc).encode('utf-8')).hexdigest()[0:4],16) < GAMER_BAWA
 
 
 if __name__ == '__main__':

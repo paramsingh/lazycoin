@@ -68,8 +68,13 @@ class Miner(object):
     def solve_puzzle(self, block):
 
         print("solving puzzle")
+        acc = ''
+        for t in block.transactions:
+            acc += str(t.hash)
 
-        #check stop mining in while loop
 
-        return 0
+        while True:
+            nonce = str(randint())
+            if int(sha256((nonce+acc).encode('utf-8')).hexdigest()[0:4],16) < GAMER_BAWA:
+                return nonce
 

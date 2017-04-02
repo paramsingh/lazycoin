@@ -81,8 +81,8 @@ def handle_receive(sock, User):
             block = obj
             if block.verify():
                 # add block to redis
-
-
+                print("Received block is verified")
+                print("Stopping current mining")
                 stop_mining()
 
                 key = "{}{}".format(BLOCK_KEY_PREFIX, block.hash)
