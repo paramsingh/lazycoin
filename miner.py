@@ -95,5 +95,4 @@ class Miner(object):
             if int(hashlib.sha256((nonce+acc).encode('utf-8')).hexdigest()[0:6],16) < GAMER_BAWA:
                 print("val:", int(hashlib.sha256((nonce+acc).encode('utf-8')).hexdigest()[0:4],16))
                 print("nonce:", nonce)
-                time.sleep(10)
                 return nonce
