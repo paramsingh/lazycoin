@@ -87,6 +87,7 @@ class Block(object):
     def __init__(self, prev_hash):
         self.prev_hash = prev_hash
         self.transactions = []
+        self.signatures = []
 
 
     def full(self):
@@ -95,7 +96,7 @@ class Block(object):
 
     def add_transaction(self, transaction):
         self.transactions.append(transaction)
-
+        self.signatures.append(transaction.signature)
 
     def to_json(self):
         payload = {

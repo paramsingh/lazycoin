@@ -1,5 +1,5 @@
 # host and port for client and tracker
-HOST = '192.168.43.92'
+HOST = '127.0.0.1'
 PORT = 9996
 
 # redis key prefixes

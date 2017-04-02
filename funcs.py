@@ -3,6 +3,8 @@ import socket
 def send_data(sock,data):
 	sock.sendall(data)
 
+
+
 def receive_data(sock,size = 4096):
 	data = bytes()
 	while size:
@@ -18,6 +20,15 @@ def nDigit(s,size):
 	if(len(s)<size):
 		s = '0'*(size-len(s))+s
 	return s
+
+def send_bytes(sock,data)
+	size = nDigit(len(data),5).encode('utf-8')
+	sendall(size+data)
+
+def receive_bytes(sock,data)
+	size = receive_data(sock,5).decode('utf-8')
+	data = receive_data(sock,int(size))
+	return data
 
 def create_listening_socket(host,port,size):
 	listening_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)

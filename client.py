@@ -9,6 +9,7 @@ from user import LazyUser
 from config import HOST, PORT, TRANSACTION_QUEUE_KEY, BLOCK_USED_KEY_PREFIX, BLOCK_KEY_PREFIX, \
     PREV_HASH_KEY, SEND_TRANSACTIONS_QUEUE_KEY
 from miner import Miner
+import pickle
 
 
 prev_hash = 'block hash of genesis'
@@ -22,7 +23,13 @@ def miner_thread(sock, User):
         print("trying to mine")
         block = miner.mine()
         print("have a block, broadcasting")
-        funcs.send_message(sock, block.to_redis())
+        #funcs.send_message(sock, block.to_redis())
+        #funcs.send_object(block)
+        serial = pickle.dumps(block)
+        print("Serialized block = ")
+        print(serial)
+        #print(json.dumps(bl.to_json(),indent = 4))
+        funcs.send_data(sock,serial)
 
 
 def send_transaction(sock,User):
