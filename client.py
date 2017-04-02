@@ -34,6 +34,7 @@ def miner_thread(sock, User):
         serial = pickle.dumps(block)
         print("Serialized block = ")
         print(serial)
+        print(json.dumps(block.to_json(), indent=4))
         #print(json.dumps(bl.to_json(),indent = 4))
         funcs.send_message(sock,"Block")
         funcs.send_bytes(sock,serial)

@@ -22,7 +22,7 @@ class Transaction(object):
 
     @property
     def message(self):
-        return json.dumps(self.to_dict(), sort_key=True)
+        return json.dumps(self.to_dict(), sort_keys=True).encode('utf-8')
 
     @property
     def hash(self):
@@ -141,7 +141,7 @@ class Block(object):
         for t in self.transactions:
             acc += str(t.hash)
 
-        return int(sha256((str(self.nonce)+acc).encode('utf-8')).hexdigest()[0:4],16) < GAMER_BAWA
+        return int(sha256((str(self.nonce)+acc).encode('utf-8')).hexdigest()[0:6],16) < GAMER_BAWA
 
 
 if __name__ == '__main__':
