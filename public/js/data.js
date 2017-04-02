@@ -2,15 +2,18 @@ window.addEventListener('load', function() {
     var socket = io();
     var canvas = document.getElementById("myCanvas");
     var ctx = canvas.getContext("2d");
-    var mock = [{'noonce':'hello', 'prev_hash':'what', 'transactions':[{'sender': 'ram', 'receiver': 'shyam', 'signature': 'sig'}, {'sender': 'ram', 'receiver': 'shyam', 'signature': 'sig'}]}, {'noonce':'hello', 'prev_hash':'what', 'transactions':[{'sender': 'ram', 'receiver': 'shyam', 'signature': 'sig'}]}, {'noonce':'hello', 'prev_hash':'what', 'transactions':[{'sender': 'ram', 'receiver': 'shyam', 'signature': 'sig'}]}];
+    var mock = [{'nonce':'hello', 'prev_hash':'what', 'transactions':[{'sender': 'ram', 'receiver': 'shyam', 'signature': 'sig'}, {'sender': 'ram', 'receiver': 'shyam', 'signature': 'sig'}]}, {'nonce':'hello', 'prev_hash':'what', 'transactions':[{'sender': 'ram', 'receiver': 'shyam', 'signature': 'sig'}]}, {'noonce':'hello', 'prev_hash':'what', 'transactions':[{'sender': 'ram', 'receiver': 'shyam', 'signature': 'sig'}]}];
 
     
-    socket.on('data', function (data) {
-        console.log('event received');
-        /*console.log(data);
+    socket.on('data', function (msg) {
+        data = msg.data;
+        //console.log(data[0]);
         var new_arr = [];
+        data = msg.data
+        //console.log(msg.data);
+        var cur_hash;
         for(var i = 0; i < data.length; i++) {
-            if(data[i].prev_hash == 'No hash') {
+            if(data[i].prev_hash == null) {
                 new_arr.push(data[i]);
                 cur_hash = data[i].hash;
             }
@@ -24,36 +27,35 @@ window.addEventListener('load', function() {
                     break;
                 }
             }
-        }*/
+        }
 
-        drawChain(mock);
+        drawChain(new_arr);
     });
 
-    var x = 0, y = 0;
+    var x = 10, y = 0;
 
 
     function drawChain(hello) {
         for(var i = 0; i < hello.length; i++) {
-            ctx.font = '20px serif';
+            ctx.font = '20px Arial';
         
             var data = hello[i];
 
             ctx.fillStyle = '#CCCCCC';
             ctx.fillRect(x, y, 250, 420);
-            var noonce = data.noonce;
+            var nonce = data.nonce;
             var prevHash = data.prev_hash;
-            ctx.fillStyle = '#996699';
+            ctx.fillStyle = '#006699';
             y = 10;
             ctx.fillRect(x, y, 250, 50);
-            ctx.fillStyle = 'black';
-            ctx.fillText('Noonce :' + data.noonce, x, y+20);
-            //ctx.fillText(data.noonce, x, y+00);
-            ctx.fillStyle = '#996699';
+            ctx.fillStyle = '#ddd';
+            ctx.fillText('Noonce :' + data.nonce, x, y+20);
+            //ctx.fillText(data.nonce, x, y+00);
+            ctx.fillStyle = '#006699';
             y = y + 70;
             ctx.fillRect(x, y, 250, 50);
-            ctx.fillStyle = 'black';
+            ctx.fillStyle = '#ddd';
             ctx.fillText('Prev Hash :' + data.prev_hash, x, y+20);
-            //ctx.fillText(data.prev_hash, x, y+00);
             y = 160;
             ctx.lineWidth=10;
             if(i != 0) {
@@ -64,21 +66,28 @@ window.addEventListener('load', function() {
             }
 
             var transactions = data.transactions;
-            ctx.font = '20px serif';
+            console.log(transactions);
+            ctx.font = '20px Arial';
             for(var j = 0; j < transactions.length; j++) {
-                var tr = transactions[j];
-                ctx.fillStyle = '#996699';
-                if(tr.type == 'create') ctx.fillStyle = 'green';
+                var tr = transactions[j]['data'];
+                console.log("printing tr")
+                console.log(tr);
+                ctx.fillStyle = '#006699';
+                if(tr.type == 'CREATE') ctx.fillStyle = 'green';
                 ctx.fillRect(x, y, 250, 110);
-                ctx.fillStyle = 'black';
-                ctx.fillText('Sender: ' + tr.sender, x, y+20);
-                ctx.fillText('Receiver: ' + tr.receiver, x, y+60);
-                ctx.fillText('Sign: ' + tr.receiver, x, y+100);
+                ctx.fillStyle = '#ddd';
+                var senderkey = tr.sender.e.toString(16) + tr.sender.n.toString(16);
+                senderkey = senderkey.substr(0, 10);
+                var receiverkey = tr.receiver.e.toString(16) + tr.receiver.n.toString(16);
+                receiverkey = receiverkey.substr(0, 10);
+                ctx.fillText('Sender: ' + senderkey, x, y+20);
+                ctx.fillText('Receiver: ' + receiverkey, x, y+60);
+                ctx.fillText('Sign: ' + tr.receiver.n.toString(16).substr(0, 15), x, y+100);
                 y = y + 130;
             }
             x = x + 320, y = 0;
         }
-        x = 0, y = 0;
+        x = 10, y = 0;
         return;
     }
 });
