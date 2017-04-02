@@ -37,7 +37,7 @@ class Transaction(object):
             },
             'receiver': {
                 'n': self.receiver.n,
-                'e': self.receiver.e
+                'e': self.receiver.e,
             },
         }
 

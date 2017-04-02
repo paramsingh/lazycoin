@@ -57,12 +57,11 @@ def stop_mining():
 def handle_receive(sock, User):
     """ Thread receives broadcasted data """
     while True:
-        
+
         tp = funcs.receive_message(sock)
 
         data = funcs.receive_bytes(sock)
         obj = pickle.loads(data)
-
         if tp == "Transaction":
             # load transaction into a transaction object
             transaction = obj
@@ -102,7 +101,6 @@ def handle_receive(sock, User):
                 print("prev hash key set to {}".format(block.hash))
                 redis_connection.set(PREV_HASH_KEY, block.hash)
 
-                # TODO (param): remove pending transactions
             else:
                 print(type(obj))
                 print("Invalid block received from tracker", file=sys.stderr)

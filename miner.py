@@ -27,7 +27,7 @@ class Miner(object):
         prev_hash = self.r.get(PREV_HASH_KEY)
         if prev_hash:
             prev_hash = prev_hash.decode('utf-8')
-    
+
         block = Block(prev_hash)
 
 
@@ -72,7 +72,7 @@ class Miner(object):
         block.add_nonce(nonce)
         print("block done")
         print(json.dumps(block.to_json(), indent=4))
-        
+
         if self.stop_mining():
             return None
 
