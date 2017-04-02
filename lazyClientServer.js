@@ -25,20 +25,24 @@ serv.listen(5000, function() {
 
 function getBlocks() {
     client.keys('chain.block.*', function (err, keys) {
+        console.log('printing keys');
+        console.log(keys);
         var arr = [];
         if (err) return console.log(err);
         var counter = 0;
         for(var i = 0, len = keys.length; i < len; i++) {
-            console.log(keys[i]);
             var block = client.get(keys[i], function(err, reply) {
                 if(err) {
                     console.log('error occured');
                     console.log(err);
                 }
                 // reply is the block
-                console.log(reply);
+                //console.log(reply);
                 block = JSON.parse(reply);
+                console.log('now printing block');
                 console.log(block);
+                console.log('now transactions');
+                console.log(block['transactions']);
                 arr.push(block);
                 if(counter === keys.length) {
                     return arr;
@@ -51,6 +55,7 @@ function getBlocks() {
 io.on('connection', function(socket) {
     console.log('A client connected');
     setInterval(function() {
+        console.log('\n\nNew Iteration');
         socket.emit('data', getBlocks());
     }, 4000);
 });
