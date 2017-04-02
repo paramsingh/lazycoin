@@ -26,5 +26,14 @@ if __name__ == '__main__':
     t.write_to_redis(r, SEND_TRANSACTIONS_QUEUE_KEY)
     print(r.llen(SEND_TRANSACTIONS_QUEUE_KEY))
 
+    t = Transaction(
+        prev_hash=prev_hash,
+        transaction_type='SEND',
+        sender=hero.pub,
+        receiver=receiver.pub
+    )
+
+    t.write_to_redis(r, SEND_TRANSACTIONS_QUEUE_KEY)
+
 
 
