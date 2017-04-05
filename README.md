@@ -1,9 +1,18 @@
-# lazycoin
+# Blockchain for lazycoin
 
 An implementation of a blockchain used to manage transactions in a new cryptocurrency called lazycoin.
-The chain and crypto is written in python and there is a visualizer of the blockchain in JS.
 
-This was a project for the Hackathon that took place in NITH during Nimbus 2017.
+The blockchain uses RSA public and private keys for signing transactions and SHA-256 for hashing transactions and blocks.
+
+Signed transactions and blocks are broadcasted as objects using pickle over the network.
+
+The blockchain is completely autonomous except for a tracker for broadcasting objects among peers. 
+
+Redis is used to maintain the block chain in all peers and hash pointers to verify transaction.
+
+Miners compete over a Hash Puzzle which is made using SHA-256 Hash digest of outstanding transactions to find the nonce.
+
+This was a project for a 2 day Hackathon that took place in NITH during Nimbus 2017.
 
 
 ## Authors
