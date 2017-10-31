@@ -3,8 +3,6 @@ import socket
 def send_data(sock,data):
 	sock.sendall(data)
 
-
-
 def receive_data(sock,size = 4096):
 	data = bytes()
 	while size:
@@ -36,12 +34,10 @@ def create_listening_socket(host,port,size):
 	listening_socket.listen(100)
 	return listening_socket
 
-
 def receive_message(sock):
 	size = receive_data(sock,5).decode('utf-8')
 	msg = receive_data(sock,int(size)).decode('utf-8')
 	return msg
-
 
 def send_message(sock,message):
 	message = message.encode('utf-8')
